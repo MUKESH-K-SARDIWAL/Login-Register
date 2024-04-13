@@ -1,9 +1,11 @@
-import { Image, StyleSheet, Text, View, Button, TextInput, Dimensions, TouchableOpacity, } from 'react-native'
+import { Image, StyleSheet, Text, View, Button, TextInput, Dimensions, TouchableOpacity, Alert, } from 'react-native'
 import React, { useCallback } from 'react'
 import { Formik } from 'formik';
 import CustomTextInput from '../Common/CustomTextInput';
 import * as Yup from 'yup';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+
 
 const SignUp = () => {
     const { width } = Dimensions.get('screen');
@@ -15,21 +17,39 @@ const SignUp = () => {
             .matches(/^[a-zA-Z0-9]+$/, 'Password can only contain letters and numbers')
             .required('Password is required'),
         email: Yup.string().email('Invalid email').required('Email is Required'),
-        name :Yup.string().required("Name is Required")
+        name: Yup.string().required("Name is Required")
     });
 
     const navigation = useNavigation();
 
-    const goToSignUpPage = useCallback(() => {
-        navigation.navigate('SignUp')
+    const goToLoginPage = useCallback(() => {
+        navigation.navigate('Login')
+    }, []);
+
+    const createUser = useCallback((values) => {
+        axios.post('https://api.escuelajs.co/api/v1/users/', {
+            "email": values.email,
+            "name": values.name,
+            "password": values.password,
+            "avatar": "https://api.lorem.space/image/face?w=640&h=480"
+        })
+            .then(function (response) {
+                console.log('response', response);
+                Alert.alert(JSON.stringify(`id:${response.data.id} role:${response.data.role} creationAt :${response.data.creationAt}`))
+            })
+            .catch(function (error) {
+                console.log('error', error);
+                Alert.alert(JSON.stringify(error))
+            });
+
     }, [])
 
     return (
         <View style={styles.container}>
 
             <Formik
-                initialValues={{ email: '', password: '', name:'' }}
-                onSubmit={values => console.log(values)}
+                initialValues={{ email: '', password: '', name: '' }}
+                onSubmit={values => createUser(values)}
                 validationSchema={loginSchema}
             >
                 {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isValid, isValidating }) => (
@@ -61,7 +81,7 @@ const SignUp = () => {
                         <View style={{ marginTop: 20 }}>
                             <Button onPress={handleSubmit} title="Submit" />
                         </View>
-                        <TouchableOpacity onPress={goToSignUpPage} style={{ marginTop: 20 }}>
+                        <TouchableOpacity onPress={goToLoginPage} style={{ marginTop: 20 }}>
                             <Text style={{ textAlign: 'center', fontSize: 14, color: '#000' }}>Go To Login</Text>
                         </TouchableOpacity>
                     </View>

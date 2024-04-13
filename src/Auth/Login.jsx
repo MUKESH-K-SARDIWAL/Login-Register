@@ -1,9 +1,10 @@
-import { Image, StyleSheet, Text, View, Button, TextInput, Dimensions, TouchableOpacity, } from 'react-native'
+import { Image, StyleSheet, Text, View, Button, TextInput, Dimensions, TouchableOpacity, Alert, } from 'react-native'
 import React, { useCallback } from 'react'
 import { Formik } from 'formik';
 import CustomTextInput from '../Common/CustomTextInput';
 import * as Yup from 'yup';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 
 const Login = () => {
 
@@ -13,7 +14,8 @@ const Login = () => {
         password: Yup.string()
             .min(2, 'Too Short!')
             .max(10, 'Too Long!')
-            .required('Password is Required'),
+            .matches(/^[a-zA-Z0-9]+$/, 'Password can only contain letters and numbers')
+            .required('Password is required'),
         email: Yup.string().email('Invalid email').required('Email is Required'),
     });
 
@@ -21,6 +23,21 @@ const Login = () => {
 
     const goToSignUpPage = useCallback(() => {
         navigation.navigate('SignUp')
+    }, []);
+
+    const SubmitLogin = useCallback((values) => {
+        axios.post('https://api.escuelajs.co/api/v1/auth/login', {
+            email: values.email,
+            password: values.password
+        })
+            .then(function (response) {
+                console.log('response', response);
+            })
+            .catch(function (error) {
+                console.log('error', error);
+                Alert.alert(JSON.stringify(error))
+            });
+
     }, [])
 
     return (
@@ -28,7 +45,7 @@ const Login = () => {
 
             <Formik
                 initialValues={{ email: '', password: '' }}
-                onSubmit={values => console.log(values)}
+                onSubmit={values => SubmitLogin(values)}
                 validationSchema={loginSchema}
             >
                 {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isValid, isValidating }) => (
@@ -54,8 +71,8 @@ const Login = () => {
                         <View style={{ marginTop: 20 }}>
                             <Button onPress={handleSubmit} title="Submit" />
                         </View>
-                        <TouchableOpacity onPress={goToSignUpPage} style={{marginTop:20}}>
-                            <Text style={{ textAlign: 'center', fontSize: 14, color: '#000' }}>Sign Up</Text>
+                        <TouchableOpacity onPress={goToSignUpPage} style={{ marginTop: 20 }}>
+                            <Text style={{ textAlign: 'center', fontSize: 14, color: '#000' }}> Go To Sign Up</Text>
                         </TouchableOpacity>
                     </View>
                 )}
